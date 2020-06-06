@@ -24,8 +24,20 @@ static inline void trim(std::string &s) {
     rtrim(s);
 }
 
-//static inline string split(std::string &s) {
-//    s.find(s)
-//}
+static inline std::vector<std::string> split(std::string_view &s, char delimiter = ' ') {
+    std::vector<std::string> result;
+
+    std::string tmp_string = {};
+    for (size_t i = 0; i <= s.size(); ++i) {
+        if (i == s.size() || s.at(i) == delimiter) {
+            result.push_back(tmp_string);
+            tmp_string = {};
+        } else {
+            tmp_string += s.at(i);
+        }
+    }
+
+    return result;
+}
 
 #endif //SHELLZ_UTILS_H

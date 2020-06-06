@@ -4,6 +4,7 @@
 #include <map>
 #include <stdexcept>
 #include <memory>
+#include <sstream>
 #include "utils.h"
 
 enum CellType
@@ -33,24 +34,36 @@ public:
      * place ship - place a5(where) 3(ship type) v(orientation)
      * shoot - shoot c3(where)
      */
-    explicit CommandTranslator(std::string &command)
+    explicit CommandTranslator(std::string_view &command)
     {
-        command = command.erase(0,6);
+        auto commandArgs = split(command);
 
-        //TODO read 10!
-        coordinates = command.substr(0, 2);
-        ship = command[3] - '0';
-        orientation = command[5];
+        if (commandArgs.empty() || commandArgs.size() != CommandTranslator::EXPECTED_ARGUMENTS_COUNT) {
+            throw std::invalid_argument("Provided command arguments are not correct!");
+        }
+
+        command = commandArgs.at(0);
+        coordinates = commandArgs.at(1);
+
+        std::stringstream ship_string(commandArgs.at(2));
+        std::stringstream orientation_string(commandArgs.at(3));
+        ship_string >> ship;
+        orientation_string >> orientation;
     }
 
-    size_t get_ship()
+    [[nodiscard]] size_t get_ship() const
     {
         return ship;
     }
 
-    char get_orientation()
+    [[nodiscard]] char get_orientation() const
     {
         return orientation;
+    }
+
+    [[nodiscard]] std::string_view get_command() const
+    {
+        return command;
     }
 
     Coordinates* get_coordinates()
@@ -62,6 +75,8 @@ public:
         return new Coordinates(coordinate_column, coordinate_row);
     }
 private:
+    constexpr static int EXPECTED_ARGUMENTS_COUNT = 4;
+    std::string_view command {};
     std::string coordinates {};
     size_t ship {};
     char orientation {};
@@ -71,7 +86,7 @@ private:
 struct PlayField
 {
 public:
-    bool placeShip(std::string placement)
+    bool placeShip(std::string_view placement)
     {
         auto command = std::make_unique<CommandTranslator>(placement);
 
@@ -80,8 +95,8 @@ public:
 
     void display()
     {
-        std::string letters_row { "  | A | B | C | D | E | F | G | H | I | J |" };
-        std::string delimiter { "-------------------------------------------" };
+        std::string_view letters_row { "  | A | B | C | D | E | F | G | H | I | J |" };
+        std::string_view delimiter { "-------------------------------------------" };
 
         std::cout << letters_row << std::endl;
 
@@ -164,7 +179,7 @@ private:
 
 int main() {
     auto playerField1 = std::make_unique<PlayField>();
-    playerField1->placeShip("place h9 4 v");
+    playerField1->placeShip("place h10 4 v");
     playerField1->display();
 
     return 0;
